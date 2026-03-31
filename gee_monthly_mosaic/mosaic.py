@@ -374,38 +374,47 @@ class MonthlyMosaicBuilder:
         self, label: str, start: str, end: str, region: list, n_images: int
     ) -> Dict[str, any]:
         """Build and return {month, url, n_images} for a single month. Runs in a thread."""
-        mosaic = self._build_mosaic(label, start, end)
-        img_rgb = mosaic.select(self.vis["bands"])
-
-        if self.stretch:
-            img_rgb = linear_stretch_2pct(img_rgb, self.geometry)
-            # All stats null → empty mosaic (no valid pixels in AOI this month)
-            if img_rgb is None:
+        try:
+            # Early exit for months with no images
+            if n_images == 0:
                 return {"month": label, "url": None, "n_images": n_images}
-            thumb_params = {
-                "bands": ["r", "g", "b"],
-                "min": 0,
-                "max": 255,
-                "dimensions": self.dimensions,
-                "region": region,
-                "format": "png",
-            }
-        else:
-            thumb_params = {
-                "min": self.vis["min"],
-                "max": self.vis["max"],
-                "gamma": self.vis.get("gamma", 1.0),
-                "dimensions": self.dimensions,
-                "region": region,
-                "format": "png",
-            }
 
-        if self.paint_geometry:
-            img_rgb = paint_geometry(img_rgb, self.geometry, self.geometry_color, self.geometry_width)
+            mosaic = self._build_mosaic(label, start, end)
+            img_rgb = mosaic.select(self.vis["bands"])
 
-        url = img_rgb.getThumbURL(thumb_params)
-        logger.info(f"[{label}] URL generated ({n_images} images)")
-        return {"month": label, "url": url, "n_images": n_images}
+            if self.stretch:
+                img_rgb = linear_stretch_2pct(img_rgb, self.geometry)
+                # All stats null → empty mosaic (no valid pixels in AOI this month)
+                if img_rgb is None:
+                    return {"month": label, "url": None, "n_images": n_images}
+                thumb_params = {
+                    "bands": ["r", "g", "b"],
+                    "min": 0,
+                    "max": 255,
+                    "dimensions": self.dimensions,
+                    "region": region,
+                    "format": "png",
+                }
+            else:
+                thumb_params = {
+                    "min": self.vis["min"],
+                    "max": self.vis["max"],
+                    "gamma": self.vis.get("gamma", 1.0),
+                    "dimensions": self.dimensions,
+                    "region": region,
+                    "format": "png",
+                }
+
+            if self.paint_geometry:
+                img_rgb = paint_geometry(img_rgb, self.geometry, self.geometry_color, self.geometry_width)
+
+            url = img_rgb.getThumbURL(thumb_params)
+            logger.info(f"[{label}] URL generated ({n_images} images)")
+            return {"month": label, "url": url, "n_images": n_images}
+
+        except Exception as e:
+            logger.warning(f"[{label}] Failed to generate URL: {e}")
+            return {"month": label, "url": None, "n_images": n_images}
 
     def _build_all(self) -> Dict[str, "ee.Image"]:
         if self._mosaics is None:
