@@ -40,17 +40,14 @@ from datetime import datetime, date
 from typing import Dict, List, Optional, Tuple, Union
 
 from gee_monthly_mosaic.acquisition import get_s2_sr_cld_col_masked
+from gee_monthly_mosaic.cloud_masking import preset_balanced
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Default cloud filtering constants
+# Default cloud filtering preset
 # ---------------------------------------------------------------------------
-CLOUD_FILTER = 30
-CLD_PRB_THRESH = 30
-NIR_DRK_THRESH = 0.15
-CLD_PRJ_DIST = 1
-BUFFER = 50
+_DEFAULT_PRESET = preset_balanced()
 
 # ---------------------------------------------------------------------------
 # Composite presets
@@ -275,13 +272,18 @@ class MonthlyMosaicBuilder:
     cloud_filter : int
         Max cloud cover % for scene-level pre-filter (default: 30).
     cld_prb_thresh : int
-        Cloud probability threshold for pixel masking (default: 30).
+        Cloud probability threshold for pixel masking (default: from preset_balanced).
     nir_drk_thresh : float
-        NIR darkness threshold for shadow detection (default: 0.15).
+        NIR darkness threshold for shadow detection (default: from preset_balanced).
     cld_prj_dist : int
         Shadow projection distance ×100 m (default: 1).
     buffer : int
-        Cloud mask dilation in meters (default: 50).
+        Cloud mask dilation in meters (default: from preset_balanced).
+
+    Note:
+        Cloud filtering defaults use the 'balanced' preset from cloud_masking.
+        For conservative or aggressive masking, import and use preset_conservative()
+        or preset_aggressive() from cloud_masking.py.
     """
 
     def __init__(
@@ -295,11 +297,11 @@ class MonthlyMosaicBuilder:
         geometry_color: Union[str, int] = "FF0000",
         geometry_width: int = 2,
         dimensions: int = 512,
-        cloud_filter: int = CLOUD_FILTER,
-        cld_prb_thresh: int = CLD_PRB_THRESH,
-        nir_drk_thresh: float = NIR_DRK_THRESH,
-        cld_prj_dist: int = CLD_PRJ_DIST,
-        buffer: int = BUFFER,
+        cloud_filter: int = 30,
+        cld_prb_thresh: int = _DEFAULT_PRESET["cloud_prob_threshold"],
+        nir_drk_thresh: float = _DEFAULT_PRESET["nir_threshold"],
+        cld_prj_dist: int = 1,
+        buffer: int = _DEFAULT_PRESET["buffer_meters"],
     ) -> None:
         self.geometry = geometry
         self.end_date = end_date
