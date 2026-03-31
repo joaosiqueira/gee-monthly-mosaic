@@ -1,0 +1,35 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "gee-monthly-mosaic"
+version = "0.1.0"
+description = "Cloud-free Sentinel-2 monthly mosaics via Google Earth Engine"
+authors = [{name = "MapBiomas", email = "info@mapbiomas.org"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = [
+    "earthengine-api>=0.1.300",
+]
+
+[project.optional-dependencies]
+notebook = [
+    "geemap>=0.37.0",
+    "pillow>=9.0.0",
+    "matplotlib>=3.5.0",
+    "requests",
+    "jupyter",
+]
+
+[project.urls]
+Repository = "https://github.com/mapbiomas/gee-monthly-mosaic"
+Issues = "https://github.com/mapbiomas/gee-monthly-mosaic/issues"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
